@@ -1,21 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const {readFile,writeFile } = require('fs/promises');
-
 const pathToAssets = path.join(__dirname, 'assets');
 const pathToDir = path.join(__dirname, 'project-dist');
 const pathToStyles = path.join(__dirname, 'styles');
-
-
-// creating directory
 fs.mkdir(pathToDir,{recursive:true}, err => {
   if (err) throw err;
 });
 fs.mkdir(pathToDir+'\\'+'assets',{recursive:true}, err => {
   if (err) throw err;
 });
-
-// mergin all css styles
 const writeStreamCss = fs.createWriteStream(pathToDir + '\\' + 'style.css');
 async function merginStyles(pathToStyles) {
   fs.readdir(pathToStyles, { withFileTypes: true }, (err, files) => {
@@ -39,8 +33,6 @@ async function merginStyles(pathToStyles) {
     
 }
 merginStyles(pathToStyles);
-
-// clonning folder
 function copyDir(filesPath,copiedPath) {
   fs.readdir(filesPath, { withFileTypes: true }, (err,files)=> {
     if (err) {
