@@ -1,34 +1,28 @@
-
-const fs = require('fs');
+const { readdir, copyFile, rm, mkdir } = require('fs/promises');
 const path = require('path');
-const copiedPath = path.join(__dirname, 'files-copy');
-const filesPath= path.join(__dirname,'files');
+const { stdout } = process;
 
-fs.mkdir(copiedPath,{recursive:true}, err => {
-  if (err) console.log(err);
-  console.log('folder created successfuly');
-});
+const sourcePath = path.join(__dirname, 'files');
+const targetPath = path.join(__dirname, 'files-copy');
 
-function copyDir(filesPath,copiedPath) {
-  fs.readdir(filesPath, { withFileTypes: true }, (err,files)=> {
-    if (err) {
-      throw err;
+async function copyDir(source, target) {
+    try {
+        const files = await readdir(source, { withFileTypes: true });
+        for (const file of files) {
+            if (file.isFile()) {
+                await copyFile(path.join(source, file.name), path.join(target, file.name));
+            } else if (file.isDirectory()) {
+                await mkdir(path.join(target, file.name));
+                await copyDir(path.join(source, file.name), path.join(target, file.name));
+            }
+        }
+    } catch (err) {
+        stdout.write(`\nError: ${err.message}\n`);
     }
-    else {
-      files.forEach(file=> {
-        if (file.isFile()) {
-          fs.copyFile(path.join(filesPath, file.name), path.join(copiedPath, file.name), err => {
-            if (err) throw err;
-          }); 
-        }
-        else if (file.isDirectory()) {
-          fs.mkdir(copiedPath+'\\'+file.name,{recursive:true}, err => {
-            if (err) throw err;
-          });
-          copyDir(path.join(filesPath, file.name),path.join(copiedPath, file.name));
-        }
-      });
-    } 
-  });
 }
-copyDir(filesPath, copiedPath);
+
+(async function() {
+    await rm(targetPath, { recursive: true, force: true });
+    await mkdir(targetPath, { recursive: true });
+    await copyDir(sourcePath, targetPath);
+})();
